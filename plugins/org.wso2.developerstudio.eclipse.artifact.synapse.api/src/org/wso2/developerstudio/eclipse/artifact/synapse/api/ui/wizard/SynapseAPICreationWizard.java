@@ -56,6 +56,7 @@ import org.wso2.developerstudio.eclipse.artifact.synapse.api.Activator;
 import org.wso2.developerstudio.eclipse.artifact.synapse.api.exceptions.SwaggerDefinitionProcessingException;
 import org.wso2.developerstudio.eclipse.artifact.synapse.api.model.APIArtifactModel;
 import org.wso2.developerstudio.eclipse.artifact.synapse.api.util.APIImageUtils;
+import org.wso2.developerstudio.eclipse.artifact.synapse.api.util.MetadataUtils;
 import org.wso2.developerstudio.eclipse.capp.maven.utils.MavenConstants;
 import org.wso2.developerstudio.eclipse.esb.core.ESBMavenConstants;
 import org.wso2.developerstudio.eclipse.esb.project.artifact.ESBArtifact;
@@ -154,6 +155,8 @@ public class SynapseAPICreationWizard extends AbstractWSO2ProjectCreationWizard 
             updatePom();
             esbProject.refreshLocal(IResource.DEPTH_INFINITE, new NullProgressMonitor());
             String groupId = getMavenGroupId(pomfile) + ".api";
+            IContainer swaggerLocation = esbProject.getFolder("metadata/resources/swagger");
+            IContainer metadataLocation = esbProject.getFolder("metadata/resources/metadata");
             if (getModel().getSelectedOption().equals("import.api")) {
                 IFile api = location.getFile(new Path(getModel().getImportFile().getName()));
                 if (api.exists()) {
@@ -170,6 +173,8 @@ public class SynapseAPICreationWizard extends AbstractWSO2ProjectCreationWizard 
                 artifactFile = location.getFile(new Path(apiName + ".xml"));
                 File destFile = artifactFile.getLocation().toFile();
                 FileUtils.createFile(destFile, getSynapseAPIFromSwagger(artifactModel.getSwaggerFile()));
+                IFile swaggerFile = swaggerLocation.getFile(new Path(apiName + "_swagger.json"));
+                FileUtils.createFile(swaggerFile.getLocation().toFile(), getSwaggerFileAsJSON(artifactModel.getSwaggerFile()));
                 fileLst.add(destFile);
                 String relativePath = FileUtils
                         .getRelativePath(esbProject.getLocation().toFile(),
@@ -193,6 +198,7 @@ public class SynapseAPICreationWizard extends AbstractWSO2ProjectCreationWizard 
                         .addESBArtifact(createArtifact(artifactModel.getName(), groupId, version, relativePath));
                 esbProjectArtifact.toFile();
             }
+            MetadataUtils.createMedataFile(metadataLocation, artifactModel);
             esbProject.refreshLocal(IResource.DEPTH_INFINITE, new NullProgressMonitor());
 
             for (File file : fileLst) {
