@@ -40,8 +40,14 @@ public class ESBProjectNature extends AbstractWSO2ProjectNature {
 				"api", "message-stores", "message-processors", "inbound-endpoints" };
 		IFolder parentFolder = ProjectUtils.getWorkspaceFolder(getProject(), "src", "main", "synapse-config");
 		IFolder parentTestFolder = ProjectUtils.getWorkspaceFolder(getProject(), "test", "resources", "mock-services");
+		IFolder metaDataFolder = ProjectUtils.getWorkspaceFolder(getProject(), "metadata", "resources");
 		ProjectUtils.createFolder(parentFolder);
 		ProjectUtils.createFolder(parentTestFolder);
+		// Create metadata folder and subfolders
+		ProjectUtils.createFolder(metaDataFolder);
+		createChildren(metaDataFolder, "metadata");
+	    createChildren(metaDataFolder, "swagger");
+	    
 		getProject().refreshLocal(IResource.DEPTH_INFINITE, new NullProgressMonitor());
 		for (String child : childrenList) {
 			createChildren(parentFolder, child);
