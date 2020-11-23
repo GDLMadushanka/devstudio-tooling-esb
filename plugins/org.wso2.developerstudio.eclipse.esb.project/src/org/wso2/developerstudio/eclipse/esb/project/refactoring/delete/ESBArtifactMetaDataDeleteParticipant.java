@@ -21,11 +21,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.ltk.core.refactoring.Change;
 import org.eclipse.ltk.core.refactoring.CompositeChange;
 import org.eclipse.ltk.core.refactoring.RefactoringStatus;
@@ -44,6 +47,8 @@ public class ESBArtifactMetaDataDeleteParticipant extends DeleteParticipant {
 	private static int currentFileNum;
 	private static Map<IProject, List<IFile>> changeFileList;
 	private static List<IProject> projectList;
+	
+	private static final String SYNAPSE_CONFIG_DIR_API = "api";
 
 	@Override
 	public RefactoringStatus checkConditions(IProgressMonitor progressMonitor,
@@ -65,6 +70,24 @@ public class ESBArtifactMetaDataDeleteParticipant extends DeleteParticipant {
 				List<IFile> fileList = changeFileList.get(project);
 				change.add(new ESBMetaDataFileDeleteChange(project.getName(),
 						project.getFile(ARTIFACT_XML_FILE), fileList));
+				// removing API medata
+                for (IFile file : fileList) {
+                    IPath location = file.getLocation();
+                    String[] locationSegments = location.segments();
+                    if(locationSegments[location.segmentCount()-2].equals(SYNAPSE_CONFIG_DIR_API)) {
+                        String APIXML = locationSegments[location.segmentCount()-1];
+                        String APIName = APIXML.substring(0, APIXML.length() - 4);
+                        IContainer metadataLocation = project.getFolder("metadata/resources");
+                        IFile APIMetaFile = metadataLocation.getFile(new Path("metadata/"+ APIName+"_metadata.yaml"));
+                        IFile swaggerFile = metadataLocation.getFile(new Path("swagger/"+ APIName+"_swagger.json"));
+                        if(APIMetaFile.exists()) {
+                            APIMetaFile.delete(true, null);
+                        }
+                        if(swaggerFile.exists()) {
+                            swaggerFile.delete(true, null);
+                        }
+                    }
+                }
 			}
 			resetStaticVariables();
 			return change;
